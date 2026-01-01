@@ -3,8 +3,8 @@ from neo4j import GraphDatabase
 import pandas as pd
 
 driver = GraphDatabase.driver(
-    os.getenv("NEO4J_URI", "bolt://localhost:7687"),
-    auth=(os.getenv("NEO4J_USER","neo4j"), os.getenv("NEO4J_PASS","password"))
+    os.getenv("Url"),
+    auth=(os.getenv("username"), os.getenv("PASS"))
 )
 
 def load_graph():
