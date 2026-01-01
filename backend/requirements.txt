@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+neo4j
+networkx
+shap
+torch
+torch-geometric
+pdfplumber
