@@ -1,11 +1,22 @@
-fastapi
-uvicorn
-pandas
-numpy
-scikit-learn
-neo4j
-networkx
-shap
-torch
-torch-geometric
-pdfplumber
+# Web framework
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+
+# Core data stack
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.4.2
+
+# Graph & explainability
+neo4j==5.19.0
+networkx==3.3
+shap==0.45.0
+
+# Deep learning
+torch==2.2.2
+
+# PyG (stable with torch 2.2 + numpy 1.26)
+torch-geometric==2.5.3
+
+# PDF processing
+pdfplumber==0.11.4
