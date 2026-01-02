@@ -9,13 +9,18 @@ import audit_chain
 
 app = FastAPI(title="GovGuard AI")
 
-# ✅ CORRECT CORS CONFIG (NO NETWORK ERROR)
+# ------------------- CORS -------------------
+origins = [
+    "http://localhost:3000",                      # local dev
+    "https://gov-guard-ai.vercel.app",           # deployed frontend
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend
+    allow_origins=origins,  # frontend URLs allowed
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],    # GET, POST, etc.
+    allow_headers=["*"],    # headers like Content-Type
 )
 
 # ------------------- ROUTES -------------------
