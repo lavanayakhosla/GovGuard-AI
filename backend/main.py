@@ -1,14 +1,33 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
-import fraud_detection
-import explainability
-import neo4j_graph
-import gnn_model
-import audit_chain
+from background_init import initialize_services
+
+from background_tasks import run_fraud_pipeline, progress
+
+from cache import cache
+
+# import fraud_detection
+# import explainability
+# import neo4j_graph
+# import gnn_model
+# import audit_chain
+
+APP_STATUS = {
+    "state": "starting",
+    "message": "Booting services..."
+}
 
 app = FastAPI(title="GovGuard AI")
 
+@app.on_event("startup")
+def startup_event():
+    from threading import Thread
+    Thread(
+        target=initialize_services,
+        args=(APP_STATUS,),
+        daemon=True
+    ).start()
 # ------------------- CORS -------------------
 origins = [
     "http://localhost:3000",                      # local dev
@@ -29,35 +48,55 @@ app.add_middleware(
 def root():
     return {"status": "running"}
 
+@app.get("/status")
+def status():
+    return APP_STATUS
+
+
 @app.get("/fraud")
 def fraud():
-    audit_chain.add("Fraud detection run")
-    return fraud_detection.detect().to_dict(orient="records")
+    if cache["fraud"] is None:
+        return {"message": "Analysis not ready"}
+    return cache["fraud"].to_dict(orient="records")
 
 @app.get("/explain")
 def explain():
-    return explainability.explain()
+    return cache["explain"] or {"message": "Analysis not ready"}
 
-@app.get("/graph/load")
-def load_graph():
-    neo4j_graph.load_graph()
-    return {"status": "graph loaded"}
+# @app.get("/graph/load")
+# def load_graph():
+#     neo4j_graph.load_graph()
+#     return {"status": "graph loaded"}
 
 @app.get("/collusion")
 def collusion():
-    return neo4j_graph.detect_collusion()
+    return cache["collusion"] or []
+
 
 @app.get("/gnn")
 def gnn():
-    return gnn_model.predict()
+    return cache["gnn"] or []
 
 @app.get("/fraud/statewise")
 def fraud_statewise():
-    df = fraud_detection.detect()
-    return df.groupby("state").size().to_dict()
+    if cache["fraud"] is None:
+        return {"message": "Analysis not ready"}
+    return cache["fraud"].groupby("state").size().to_dict()
 
-@app.get("/audit")
-def audit():
-    return audit_chain.chain
 
+# @app.get("/audit")
+# def audit():
+#     return audit_chain.chain
+
+@app.post("/start-fraud-analysis")
+def start_fraud(background_tasks: BackgroundTasks):
+    if progress["status"] == "running":
+        return {"message": "Analysis already running"}
+
+    background_tasks.add_task(run_fraud_pipeline)
+    return {"message": "Fraud analysis started"}
+
+@app.get("/progress")
+def get_progress():
+    return progress
 
